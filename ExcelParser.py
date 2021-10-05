@@ -93,7 +93,7 @@ class ExcelTileParser:
                 full_name = row[full_field_name_col].value
                 for rule in self.rules_action[field]:
                     self.rules_action[field][rule].append(full_name)
-        self.print_rules_actions()
+        # self.print_rules_actions()
         
 
     def write_in_file(self):
@@ -112,14 +112,39 @@ class ExcelTileParser:
                     f.write(f'\t{field_name} {full_name} \t\t{visible} {required} {read_only}\n\n')
                 f.write('================================================\n\n')
 
-    def print_rules_actions(self):
-        for field in self.rules_action:
-            print(f'{field}:')
-            for rule in self.rules_action[field]:
-                print(f'\t{rule}:')
-                print(f'\t\t{self.rules_action[field][rule]}')
 
-    def execute(self, rule_action_sheet_name, rule_sheet_name, io_sheet_name):
+    def fill_source_file (self, sc_cat_item_sheet_name, io_sheet_name):
+        ws_sc_cat = self.wb[sc_cat_item_sheet_name]
+        ws_io = self.wb[io_sheet_name]
+        category_group = 'u_group_of_categories'
+        top_category = 'u_top_category'
+        code_col = 56
+        field_name_col = 6
+        value_col = 9
+        sc_cat_io_row_number = 3
+        sc_cat_io_row = ws_sc_cat[sc_cat_io_row_number]
+        service_now_id =  sc_cat_io_row[code_col].value
+        category_id = 00000000-0000-0000-0000-000000000000
+        top_id = 00000000-0000-0000-0000-000000000000
+        for i in range(3, ws_io.max_row + 1):
+            row = ws_io[i]
+            field = row[field_name_col].value
+            if field == category_group:
+                category_id = row[value_col].value
+            if field == top_category:
+                top_id = row[value_col].value
+        with open('resources/source.txt', 'w', encoding='utf-8') as f:
+            f.write(f'IteTile; {service_now_id}\nIteGroupCategory; {category_id}\nIteTopCategories; {top_id}')
+
+    # def print_rules_actions(self):
+    #     for field in self.rules_action:
+    #         print(f'{field}:')
+    #         for rule in self.rules_action[field]:
+    #             print(f'\t{rule}:')
+    #             print(f'\t\t{self.rules_action[field][rule]}')
+
+    def execute(self, rule_action_sheet_name, rule_sheet_name, io_sheet_name, sc_cat_item_sheet_name):
+        self.fill_source_file(sc_cat_item_sheet_name, io_sheet_name)
         self.read_rules_actions(rule_action_sheet_name)
         self.read_rules(rule_sheet_name)
         self.try_fill_full_field_name(io_sheet_name)
@@ -128,8 +153,16 @@ class ExcelTileParser:
 # sheet.max_row
 # sheet.max_column
 def main():
-    excelparser = ExcelTileParser('./resources/выборка_удаленный доступ.xlsx')
-    excelparser.execute(rule_action_sheet_name='действия политик', rule_sheet_name='политики', io_sheet_name='переменные')
+    excelparser = ExcelTileParser('./resources/выборка_корпоративные_порталы.xlsx')
+    # Для старых выгрузок
+    excelparser.execute(
+        rule_action_sheet_name='catalog_ui_policy_action_дей.по', 
+        rule_sheet_name='catalog_ui_policy_политики', 
+        io_sheet_name='item_option_new', 
+        sc_cat_item_sheet_name='sc_cat_item_плитка'
+        )
+    # Для новых выгрузок
+    #excelparser.execute(rule_action_sheet_name='действия политик', rule_sheet_name='политики', io_sheet_name='переменные', sc_cat_item_sheet_name='sc_cat_item')
 
 if __name__ == '__main__':
     main()
