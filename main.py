@@ -29,7 +29,7 @@ def main():
                     rule_sheet_name='catalog_ui_policy_политики', 
                     io_sheet_name='item_option_new', 
                     sc_cat_item_sheet_name='sc_cat_item_плитка',
-                    script_sheet_name=''
+                    script_sheet_name='catalog_script_client_скрипты'
                 )
         
         lines = executor.read_source_file()
