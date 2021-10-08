@@ -5,6 +5,7 @@ class ExcelTileParser:
     def __init__(self, filename):
         self.wb = load_workbook(filename)
         self.rules_action = {}
+        self.scripts_map = {}
         # print(self.wb.sheetnames)
 
 
@@ -101,15 +102,18 @@ class ExcelTileParser:
             for field_name in self.rules_action.keys():
                 for rule_name in self.rules_action[field_name]:
                     info = self.rules_action[field_name][rule_name]
-                    visible = info[0]
-                    required = info[1]
-                    read_only = info[2]
-                    rule = info[3]
-                    full_name = info[4] if len(info) == 5 else 'NOT_FOUND_IN_IO'
-                    f.write(f'{rule_name}\n\n')
-                    if rule != '':
-                        f.write(f'\t{rule}\n\n')
-                    f.write(f'\t{field_name} {full_name} \t\t{visible} {required} {read_only}\n\n')
+                    if len(info) >= 4:
+                        visible = info[0]
+                        required = info[1]
+                        read_only = info[2]
+                        rule = info[3]
+                        full_name = info[4] if len(info) == 5 else 'NOT_FOUND_IN_IO'
+                        f.write(f'{rule_name}\n\n')
+                        if rule != '':
+                            f.write(f'\t{rule}\n\n')
+                        f.write(f'\t{field_name} {full_name} \t\t{visible} {required} {read_only}\n\n')
+                    else:
+                        f.write(f'\terror in {info}\n\n')
                 f.write('================================================\n\n')
 
 
@@ -136,6 +140,60 @@ class ExcelTileParser:
         with open('resources/source.txt', 'w', encoding='utf-8') as f:
             f.write(f'IteTile; {service_now_id}\nIteGroupCategory; {category_id}\nIteTopCategories; {top_id}')
 
+
+    def fill_scripts_map (self, script_sheet_name):
+        ws = self.wb[script_sheet_name]
+        variable_name_col = 8
+        script_name_col = 15
+        script_action_col = 17 
+        for i in range(3, ws.max_row + 1):
+            row = ws[i]
+            variable_name = row[variable_name_col].value
+            if len(variable_name) > 1:
+                variable_name = variable_name[3:]
+            script_name = row[script_name_col].value
+            script_action = row[script_action_col].value
+            self.add_in_script_map(variable_name, script_name, script_action)
+
+    def add_in_script_map(self, variable_name, script_name, script_action): 
+        script_info = {
+                'name': script_name,
+                'action': script_action
+            }
+        if not self.scripts_map.keys().__contains__(variable_name):
+            self.scripts_map[variable_name] = {
+                'name': '',
+                'script_list': []
+            }
+        self.scripts_map[variable_name]['script_list'].append(script_info)
+
+
+    def try_to_fill_field_names(self, io_sheet_name):
+        io_sheet = self.wb[io_sheet_name]
+        field_id_col = 5
+        field_name_col = 6
+        for row_number in range(4, io_sheet.max_row + 1):
+            row = io_sheet[row_number]
+            var_id = row[field_id_col].value
+            # print(var_id)
+            # print(self.scripts_map.keys())
+            if self.scripts_map.keys().__contains__(var_id):
+                field_name = row[field_name_col].value
+                self.scripts_map[var_id]['name'] = field_name
+
+
+    def write_in_actions_file(self):
+        with open('out/scripts.txt', 'w', encoding='utf-8') as f:
+            for variable in self.scripts_map.keys():
+                var_name = self.scripts_map[variable]['name']
+                scripts_of_variable = self.scripts_map[variable]['script_list']
+                f.write(f'{var_name}\n{variable}\n')
+                for script_info in scripts_of_variable:
+                    name = script_info['name']
+                    action = script_info['action']
+                    f.write(f'{name}\n\n{action}\n\n-----------------------------------------------------\n')
+                f.write(f'=====================================================\n')                    
+
     # def print_rules_actions(self):
     #     for field in self.rules_action:
     #         print(f'{field}:')
@@ -143,12 +201,15 @@ class ExcelTileParser:
     #             print(f'\t{rule}:')
     #             print(f'\t\t{self.rules_action[field][rule]}')
 
-    def execute(self, rule_action_sheet_name, rule_sheet_name, io_sheet_name, sc_cat_item_sheet_name):
+    def execute(self, rule_action_sheet_name, rule_sheet_name, io_sheet_name, sc_cat_item_sheet_name, script_sheet_name):
         self.fill_source_file(sc_cat_item_sheet_name, io_sheet_name)
         self.read_rules_actions(rule_action_sheet_name)
         self.read_rules(rule_sheet_name)
         self.try_fill_full_field_name(io_sheet_name)
         self.write_in_file()
+        self.fill_scripts_map(script_sheet_name)
+        self.try_to_fill_field_names(io_sheet_name)
+        self.write_in_actions_file()
 
 # sheet.max_row
 # sheet.max_column
