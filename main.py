@@ -8,9 +8,9 @@ def main():
     
     # write True if new and False if not new
     is_new = True
-
+    name = 'выборка_Запрос на подтверждение или изменение информации об ИТ-активе (1).xlsx'
     if method == 1:
-        excelparser = ExcelTileParser('./resources/выборка_Запрос на подтверждение или изменение информации об ИТ-активе (1).xlsx')
+        excelparser = ExcelTileParser(f'./resources/{name}')
         if is_new:
             # Для новых выгрузок
             print('new')
