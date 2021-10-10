@@ -6,8 +6,37 @@ class ExcelTileParser:
         self.wb = load_workbook(filename)
         self.rules_action = {}
         self.scripts_map = {}
+        self.io_id_to_name = {}
         # print(self.wb.sheetnames)
 
+    #rules_action = {
+    #   field_name: {
+    #       'rules': {
+    #           rule_name_1: {
+    #               'rule': rule,
+    #               'visible': visible,
+    #               'required': required,
+    #               'read_only': read_only
+    #           },
+    #           rule_name_2: {
+    #               'rule': rule,
+    #               'visible': visible,
+    #               'required': required,
+    #               'read_only': read_only
+    #           },
+    #       },
+    #       'full_name': full_field_name
+    #   }
+    # }
+    def fill_id_to_names_list(self, sheet_name):
+        ws = self.wb[sheet_name]
+        id_col = 5
+        field_name_col = 6
+        for i in range(4, ws.max_row + 1):
+            row = ws[i]
+            field_id = row[id_col].value
+            field_name = row[field_name_col].value
+            self.io_id_to_name[field_id] = field_name
 
     def read_rules_actions(self, sheet_name):
         ws = self.wb[sheet_name]
@@ -38,13 +67,37 @@ class ExcelTileParser:
             tile_field = row[tile_field_col].value
             visible = self.get_column_right_version(row, is_visible_col, 'Видимость')
             required = self.get_column_right_version(row, is_required_col, 'Обязательнотсь')
-            enabled = self.get_column_right_version(row, is_read_only_col, 'Только_для_чтения')
-            info = [visible, required, enabled]
+            enabled = self.get_column_right_version(row, is_read_only_col, 'редактируемость')
+            info = {
+                    'visible': visible, 
+                    'required': required, 
+                    'enabled': enabled
+                }
             if tile_field in self.rules_action:
-                self.rules_action[tile_field][row[politic_name_col].value] = info
+                self.rules_action[tile_field]['rules'][row[politic_name_col].value] = info
             else:
                 self.rules_action[tile_field] = {}
-                self.rules_action[tile_field][row[politic_name_col].value] = info
+                self.rules_action[tile_field]['rules'] = {}
+                self.rules_action[tile_field]['rules'][row[politic_name_col].value] = info
+    
+
+    def get_column_right_version(self, row, column, property_name):
+        not_touch = 'Не трогать'
+        yes = 'Верно'
+        no = 'Неверно'
+        if row[column].value == not_touch:
+            return ''
+        if row[column].value == yes:
+            if property_name == 'редактируемость':
+                return f'!{property_name}'
+            else:
+                return property_name
+        if row[column].value == no:
+            if property_name == 'редактируемость':
+                return property_name
+            else:
+                return f'!{property_name}'
+
 
     def read_rules(self, sheet_name):
         ws = self.wb[sheet_name]
@@ -65,22 +118,24 @@ class ExcelTileParser:
             rule_name = row[rule_name_col].value
             self.add_in_rules_actions(rule_name, rule)
 
-    def get_column_right_version(self, row, column, property_name):
-        not_touch = 'Не трогать'
-        yes = 'Верно'
-        no = 'Неверно'
-        if row[column].value == not_touch:
-            return ' '
-        if row[column].value == yes:
-            return property_name
-        if row[column].value == no:
-            return f'!{property_name}'
 
     def add_in_rules_actions(self, rule_name, rule):
         for field_name in self.rules_action.keys():
-            if rule_name in self.rules_action[field_name]:
-                self.rules_action[field_name][rule_name].append(rule)
+            if rule_name in self.rules_action[field_name]['rules']:
+                if not rule == '':
+                    rule = self.get_rule_right_version(rule)
+                self.rules_action[field_name]['rules'][rule_name]['rule'] = rule
     
+    
+    def get_rule_right_version(self, rule):
+        full_rule = rule
+        full_rule = full_rule.replace('ORIO', 'OR\n\tIO')
+        full_rule = full_rule.replace('NQIO', 'NQ\n\tIO')
+        full_rule = full_rule.replace('^IO', '^\n\tIO')
+        for field_id in self.io_id_to_name:
+            full_rule = full_rule.replace(field_id, f'{self.io_id_to_name[field_id]} ')
+        return full_rule
+
     def try_fill_full_field_name(self, sheet_name):
         ws = self.wb[sheet_name]
         field_name_col = 6
@@ -92,28 +147,24 @@ class ExcelTileParser:
             field = row[field_name_col].value
             if field in self.rules_action:
                 full_name = row[full_field_name_col].value
-                for rule in self.rules_action[field]:
-                    self.rules_action[field][rule].append(full_name)
-        # self.print_rules_actions()
-        
+                self.rules_action[field]['full_name'] = full_name
+
 
     def write_in_file(self):
+        # self.print_rules_actions()
         with open('out/БП.txt', 'w', encoding='utf-8') as f:
             for field_name in self.rules_action.keys():
-                for rule_name in self.rules_action[field_name]:
-                    info = self.rules_action[field_name][rule_name]
-                    if len(info) >= 4:
-                        visible = info[0]
-                        required = info[1]
-                        read_only = info[2]
-                        rule = info[3]
-                        full_name = info[4] if len(info) == 5 else 'NOT_FOUND_IN_IO'
-                        f.write(f'{rule_name}\n\n')
-                        if rule != '':
-                            f.write(f'\t{rule}\n\n')
-                        f.write(f'\t{field_name} {full_name} \t\t{visible} {required} {read_only}\n\n')
-                    else:
-                        f.write(f'\terror in {info}\n\n')
+                for rule_name in self.rules_action[field_name]['rules']:
+                    info = self.rules_action[field_name]['rules'][rule_name]
+                    visible = info['visible']
+                    required = info['required']
+                    enabled = info['enabled']
+                    rule = info['rule']
+                    full_name = self.rules_action[field_name]['full_name'] if self.rules_action[field_name]['full_name'] else 'NOT_FOUND_IN_IO'
+                    f.write(f'{rule_name}\n\n')
+                    if rule != '':
+                        f.write(f'\t{rule}\n\n')
+                    f.write(f'\t{field_name} {full_name} \t\t{visible} {required} {enabled}\n\n')
                 f.write('================================================\n\n')
 
 
@@ -155,6 +206,7 @@ class ExcelTileParser:
             script_action = row[script_action_col].value
             self.add_in_script_map(variable_name, script_name, script_action)
 
+
     def add_in_script_map(self, variable_name, script_name, script_action): 
         script_info = {
                 'name': script_name,
@@ -175,9 +227,7 @@ class ExcelTileParser:
         for row_number in range(4, io_sheet.max_row + 1):
             row = io_sheet[row_number]
             var_id = row[field_id_col].value
-            # print(var_id)
-            # print(self.scripts_map.keys())
-            if self.scripts_map.keys().__contains__(var_id):
+            if var_id in self.scripts_map:
                 field_name = row[field_name_col].value
                 self.scripts_map[var_id]['name'] = field_name
 
@@ -194,14 +244,19 @@ class ExcelTileParser:
                     f.write(f'{name}\n\n{action}\n\n-----------------------------------------------------\n')
                 f.write(f'=====================================================\n')                    
 
-    # def print_rules_actions(self):
-    #     for field in self.rules_action:
-    #         print(f'{field}:')
-    #         for rule in self.rules_action[field]:
-    #             print(f'\t{rule}:')
-    #             print(f'\t\t{self.rules_action[field][rule]}')
+
+    def print_rules_actions(self):
+        for field in self.rules_action:
+            print(f'{field}:')
+            for rule in self.rules_action[field]['rules']:
+                print(f'\t{rule}:')
+                print(f"\t\t{self.rules_action[field]['rules'][rule]['rule']}")
+                print(f"\t\t{self.rules_action[field]['rules'][rule]['visible']}")
+                print(f"\t\t{self.rules_action[field]['rules'][rule]['required']}")
+                print(f"\t\t{self.rules_action[field]['rules'][rule]['enabled']}")
 
     def execute(self, rule_action_sheet_name, rule_sheet_name, io_sheet_name, sc_cat_item_sheet_name, script_sheet_name):
+        self.fill_id_to_names_list(io_sheet_name)
         self.fill_source_file(sc_cat_item_sheet_name, io_sheet_name)
         self.read_rules_actions(rule_action_sheet_name)
         self.read_rules(rule_sheet_name)
@@ -214,16 +269,22 @@ class ExcelTileParser:
 # sheet.max_row
 # sheet.max_column
 def main():
-    excelparser = ExcelTileParser('./resources/выборка_корпоративные_порталы.xlsx')
+    excelparser = ExcelTileParser('./resources/выборка_Запрос на подтверждение или изменение информации об ИТ-активе (1).xlsx')
     # Для старых выгрузок
-    excelparser.execute(
-        rule_action_sheet_name='catalog_ui_policy_action_дей.по', 
-        rule_sheet_name='catalog_ui_policy_политики', 
-        io_sheet_name='item_option_new', 
-        sc_cat_item_sheet_name='sc_cat_item_плитка'
-        )
+    # excelparser.execute(
+    #     rule_action_sheet_name='catalog_ui_policy_action_дей.по', 
+    #     rule_sheet_name='catalog_ui_policy_политики', 
+    #     io_sheet_name='item_option_new', 
+    #     sc_cat_item_sheet_name='sc_cat_item_плитка'
+    #     )
     # Для новых выгрузок
-    #excelparser.execute(rule_action_sheet_name='действия политик', rule_sheet_name='политики', io_sheet_name='переменные', sc_cat_item_sheet_name='sc_cat_item')
+    excelparser.execute(
+        rule_action_sheet_name='действия политик', 
+        rule_sheet_name='политики', 
+        io_sheet_name='переменные', 
+        sc_cat_item_sheet_name='sc_cat_item',
+        script_sheet_name='скрипты'
+        )
 
 if __name__ == '__main__':
     main()
