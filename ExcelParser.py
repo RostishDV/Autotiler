@@ -7,6 +7,10 @@ class ExcelTileParser:
         self.rules_action = {}
         self.scripts_map = {}
         self.io_id_to_name = {}
+        self.tile_name = ''
+        self.short_descr = ''
+        self.descr = ''
+        self.code = 0
         # print(self.wb.sheetnames)
 
     #rules_action = {
@@ -177,25 +181,49 @@ class ExcelTileParser:
     def fill_source_file (self, sc_cat_item_sheet_name, io_sheet_name):
         ws_sc_cat = self.wb[sc_cat_item_sheet_name]
         ws_io = self.wb[io_sheet_name]
-        category_group = 'u_group_of_categories'
-        top_category = 'u_top_category'
-        code_col = 56
+        category_group = ['u_group_of_categories', 'u_category_group']
+        top_category = ['u_top_category', 'u_category_top']
+        code_field = ['Код системы']
+        name_fild = ['Имя']
+        short_desc_field = ['Краткое описание']
+        desc_field = ['Описание']
+        header = ws_sc_cat[1]
+        i = 0
+        tile_name_col = 0
+        short_decr_col = 0
+        descr_col = 0
+        code_col = 0
+        short_desc_col= 0
         field_name_col = 6
         value_col = 9
+        for cell in header:
+            if cell.value in code_field:
+                code_col = i
+            if cell.value in name_fild:
+                tile_name_col = i
+            if cell.value in desc_field:
+                descr_col = i
+            if cell.value in short_desc_field:
+                short_desc_col = i
+            i += 1
         sc_cat_io_row_number = 3
         sc_cat_io_row = ws_sc_cat[sc_cat_io_row_number]
-        service_now_id =  sc_cat_io_row[code_col].value
+
+        self.tile_name = sc_cat_io_row[tile_name_col].value
+        self.short_descr = sc_cat_io_row[short_desc_col].value
+        self.descr = sc_cat_io_row[descr_col].value
+        self.code = sc_cat_io_row[code_col].value
         category_id = 00000000-0000-0000-0000-000000000000
         top_id = 00000000-0000-0000-0000-000000000000
         for i in range(3, ws_io.max_row + 1):
             row = ws_io[i]
             field = row[field_name_col].value
-            if field == category_group:
+            if field in category_group:
                 category_id = row[value_col].value
-            if field == top_category:
+            if field in top_category:
                 top_id = row[value_col].value
         with open('resources/source.txt', 'w', encoding='utf-8') as f:
-            f.write(f'IteTile; {service_now_id}\nIteGroupCategory; {category_id}\nIteTopCategories; {top_id}')
+            f.write(f'IteTile; {self.code}\nIteGroupCategory; {category_id}\nIteTopCategories; {top_id}')
 
 
     def fill_scripts_map (self, script_sheet_name):
@@ -263,7 +291,7 @@ class ExcelTileParser:
 
     def execute(self, rule_action_sheet_name, rule_sheet_name, io_sheet_name, sc_cat_item_sheet_name, script_sheet_name):
         self.fill_id_to_names_list(io_sheet_name)
-        self.fill_source_file(sc_cat_item_sheet_name, io_sheet_name)
+        self.fill_source_file(sc_cat_item_sheet_name=sc_cat_item_sheet_name, io_sheet_name=io_sheet_name)
         self.read_rules_actions(rule_action_sheet_name)
         self.read_rules(rule_sheet_name)
         self.try_fill_full_field_name(io_sheet_name)

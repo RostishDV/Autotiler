@@ -3,7 +3,7 @@ from datetime import datetime
 from QueryGenerator import QueryGenerator
 
 class Sql:
-    def __init__(self, database, server="DESKTOP-91SSR73"):
+    def __init__(self, database, server="LAPTOP-88HGVMDK"):
         self.cnxn = pyodbc.connect("Driver={SQL Server Native Client 11.0};"
                                    "Server="+server+";"
                                    "Database="+database+";"

@@ -6,4 +6,5 @@
 __pycache__/
 resources/*.xlsx
 resources/source.txt
+resources/tile.txt
 out/
