@@ -104,7 +104,7 @@ class Executor():
                     rule_action_sheet_name='действия политик', 
                     rule_sheet_name='политики', 
                     io_sheet_name='переменные', 
-                    sc_cat_item_sheet_name='sc_cat_item_producer',
+                    sc_cat_item_sheet_name='sc_cat_item',
                     script_sheet_name='скрипты'
                 )
         else:
