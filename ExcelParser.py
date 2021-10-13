@@ -159,8 +159,14 @@ class ExcelTileParser:
                     visible = info['visible']
                     required = info['required']
                     enabled = info['enabled']
-                    rule = info['rule']
-                    full_name = self.rules_action[field_name]['full_name'] if self.rules_action[field_name]['full_name'] else 'NOT_FOUND_IN_IO'
+                    if 'rule' in info:
+                        rule = info['rule']
+                    else:
+                        rule = f'Some erreor in {info}'
+                    if 'full_name' in self.rules_action[field_name]:
+                        full_name = self.rules_action[field_name]['full_name'] 
+                    else: 
+                        full_name = 'NOT_FOUND_IN_IO'
                     f.write(f'{rule_name}\n\n')
                     if rule != '':
                         f.write(f'\t{rule}\n\n')
