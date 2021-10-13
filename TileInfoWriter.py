@@ -33,7 +33,7 @@ class TileInfoWriter:
 
 
     def write_tile_info(self):
-        text = f'Link:	http://dev.nornickel/0/Nui/ViewModule.aspx#CardModuleV2/IteInfrastructureBackupTilePage/edit/DF044920-E7FC-47D9-A2B8-5421C41C8FF6\n'
+        text = f'Link:	http://dev.nornickel/0/Nui/ViewModule.aspx#CardModuleV2/IteInfrastructureBackupTilePage/edit/{self.tile_id}\n\n\n'
         text += f'Id: {self.tile_id}\n'
         text += f'IteServiceNowId: {self.tile_sn_id}\n'
         text += f'IteName: {self.name}\n\n'
