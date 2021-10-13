@@ -57,5 +57,5 @@ class TileInfoWriter:
         text += "('410006E1-CA4E-4502-A9EC-E54D922D2C00', '410006E1-CA4E-4502-A9EC-E54D922D2C00', "
         text += "0, @TileId, 'IteDescription', N'Описание', 1);\n\n" 
         text += "select * from IteTileDescriptionBuildInfo where IteTileId = 'DF044920-E7FC-47D9-A2B8-5421C41C8FF6')"
-        with open('resources/tile.txt', 'w', encoding='utf-8') as f:
+        with open('out/tile.txt', 'w', encoding='utf-8') as f:
             f.write(text)
