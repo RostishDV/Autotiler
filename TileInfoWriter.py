@@ -41,21 +41,21 @@ class TileInfoWriter:
         text += f'ShortDescription: {self.short_descr}\n\n'
         text += f'Description:\n{self.desc}\n\n'
         try:
-            text += f'UpdateQuery:\n{self.update_info_query}\n\n'
+            text += f'UpdateQuery:\n\t{self.update_info_query}\n\n'
         except:
-            text += 'UpdateQuery:\nCan`t set categoryies\n\n'
+            text += 'UpdateQuery:\n\tCan`t set categoryies\n\n'
         try:
-            text += f'{self.update_query}\n\n'
+            text += f'\t{self.update_query}\n\n\n'
         except:
             text += f'Can`t update\n\n'
-        text += 'DescriptionBuildIfoQuery:\n'
-        text += "DECLARE @TileId varchar(36) ='DF044920-E7FC-47D9-A2B8-5421C41C8FF6';"
+        text += 'DescriptionBuildIfoQuery:\n\n'
+        text += f"DECLARE @TileId varchar(36) ='{self.tile_id}';"
         text += "INSERT INTO IteTileDescriptionBuildInfo\n"
         text += "(CreatedById, ModifiedById, ProcessListeners, IteTileId, IteColumnName, IteColumnTitle, IteOrder) VALUES\n"
         text += "('410006E1-CA4E-4502-A9EC-E54D922D2C00', '410006E1-CA4E-4502-A9EC-E54D922D2C00', "
         text += "0, @TileId, 'IteCategoryId', N'Тип запроса', 0),\n"
         text += "('410006E1-CA4E-4502-A9EC-E54D922D2C00', '410006E1-CA4E-4502-A9EC-E54D922D2C00', "
         text += "0, @TileId, 'IteDescription', N'Описание', 1);\n\n" 
-        text += "select * from IteTileDescriptionBuildInfo where IteTileId = 'DF044920-E7FC-47D9-A2B8-5421C41C8FF6')"
+        text += f"select * from IteTileDescriptionBuildInfo where IteTileId = '{self.tile_id}'"
         with open('out/tile.txt', 'w', encoding='utf-8') as f:
             f.write(text)
