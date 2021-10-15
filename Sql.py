@@ -1,13 +1,19 @@
 import pyodbc
 from datetime import datetime
 from QueryGenerator import QueryGenerator
+from ConfigReader import ConfigReader
 
 class Sql:
-    def __init__(self, database, server="LAPTOP-88HGVMDK"):
-        self.cnxn = pyodbc.connect("Driver={SQL Server Native Client 11.0};"
-                                   "Server="+server+";"
-                                   "Database="+database+";"
-                                   "Trusted_Connection=yes;")
+    def __init__(self):
+        configReader = ConfigReader()
+        connectConfig = configReader.get_connect_config()
+        server = connectConfig['server']
+        db = connectConfig['db']
+        driver = '{SQL Server Native Client 11.0}'
+        self.cnxn = pyodbc.connect(f"Driver={driver};"+
+                                   f"Server={server};"+
+                                   f"Database={db};"+
+                                   f"Trusted_Connection=yes;")
         self.query = "-- {}\n\n-- Made in Python".format(datetime.now()
                                                          .strftime("%d/%m/%Y"))
 

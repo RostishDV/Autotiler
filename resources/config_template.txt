@@ -1,0 +1,9 @@
+{
+    "is_zno": true,
+    "method": 1,
+    "name": "выборка_Неполадки в АСУ МТР (ЗСК-ПСМК).xlsx",
+    "connect": {
+        "server": "LAPTOP-88HGVMDK",
+        "db": "dev.nornickel"
+    }
+}

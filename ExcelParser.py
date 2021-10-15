@@ -1,9 +1,13 @@
 from openpyxl import load_workbook
+from ConfigReader import ConfigReader
 
 
 class ExcelTileParser:
-    def __init__(self, filename):
-        self.wb = load_workbook(filename)
+    def __init__(self):
+        conf_reader = ConfigReader()
+        file_name = f"./resources/{conf_reader.get_name()}"
+        print(file_name)
+        self.wb = load_workbook(file_name)
         self.rules_action = {}
         self.scripts_map = {}
         self.io_id_to_name = {}
@@ -11,6 +15,7 @@ class ExcelTileParser:
         self.short_descr = ''
         self.descr = ''
         self.code = 0
+        self.set_sheet_names()
         # print(self.wb.sheetnames)
 
     #rules_action = {
@@ -289,15 +294,49 @@ class ExcelTileParser:
                 print(f"\t\t{self.rules_action[field]['rules'][rule]['required']}")
                 print(f"\t\t{self.rules_action[field]['rules'][rule]['enabled']}")
 
-    def execute(self, rule_action_sheet_name, rule_sheet_name, io_sheet_name, sc_cat_item_sheet_name, script_sheet_name):
-        self.fill_id_to_names_list(io_sheet_name)
-        self.fill_source_file(sc_cat_item_sheet_name=sc_cat_item_sheet_name, io_sheet_name=io_sheet_name)
-        self.read_rules_actions(rule_action_sheet_name)
-        self.read_rules(rule_sheet_name)
-        self.try_fill_full_field_name(io_sheet_name)
+
+    def set_sheet_names(self):
+        io_sheet_names = ['переменные', 'item_option_new']
+        rule_action_sheet_names = ['действия политик', 'catalog_ui_policy_action_дей.по']
+        rule_sheet_names = ['политики', 'catalog_ui_policy_политики']
+        sc_cat_item_sheet_names = ['sc_cat_item', 'sc_cat_item_плитка', 'sc_cat_item_producer']
+        script_sheet_names = ['catalog_script_client_скрипты', 'скрипты']
+        for io_sheet_name in io_sheet_names:
+            if io_sheet_name in self.wb:
+                self.io_sheet_name = io_sheet_name
+                print(f'io = {self.io_sheet_name}')
+
+        for rule_action_sheet_name in rule_action_sheet_names:
+            if rule_action_sheet_name in self.wb:
+                self.rule_action_sheet_name = rule_action_sheet_name
+                print(f'rule_action_sheet_name = {self.rule_action_sheet_name}')
+        
+        for rule_sheet_name in rule_sheet_names:
+            if rule_sheet_name in self.wb:
+                self.rule_sheet_name = rule_sheet_name
+                print(f'rule_sheet_name = {self.rule_sheet_name}')
+        
+        for sc_cat_item_sheet_name in sc_cat_item_sheet_names:
+            if sc_cat_item_sheet_name in self.wb:
+                self.sc_cat_item_sheet_name = sc_cat_item_sheet_name
+                print(f'sc_cat_item_sheet_name = {self.sc_cat_item_sheet_name}')
+        
+        for script_sheet_name in script_sheet_names:
+            if script_sheet_name in self.wb:
+                self.script_sheet_name = script_sheet_name
+                print(f'script_sheet_name = {self.script_sheet_name}')
+
+    #, rule_action_sheet_name, rule_sheet_name, io_sheet_name, sc_cat_item_sheet_name, script_sheet_name
+    def execute(self):
+        
+        self.fill_id_to_names_list(self.io_sheet_name)
+        self.fill_source_file(sc_cat_item_sheet_name=self.sc_cat_item_sheet_name, io_sheet_name=self.io_sheet_name)
+        self.read_rules_actions(self.rule_action_sheet_name)
+        self.read_rules(self.rule_sheet_name)
+        self.try_fill_full_field_name(self.io_sheet_name)
         self.write_in_file()
-        self.fill_scripts_map(script_sheet_name)
-        self.try_to_fill_field_names(io_sheet_name)
+        self.fill_scripts_map(self.script_sheet_name)
+        self.try_to_fill_field_names(self.io_sheet_name)
         self.write_in_actions_file()
 
 # sheet.max_row

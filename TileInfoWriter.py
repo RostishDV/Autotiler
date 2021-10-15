@@ -47,7 +47,7 @@ class TileInfoWriter:
         try:
             text += f'\t{self.update_query}\n\n\n'
         except:
-            text += f'Can`t update\n\n'
+            text += f'\tCan`t update\n\n'
         text += 'DescriptionBuildIfoQuery:\n\n'
         text += f"DECLARE @TileId varchar(36) ='{self.tile_id}';"
         text += "INSERT INTO IteTileDescriptionBuildInfo\n"

@@ -2,16 +2,16 @@ from QueryGenerator import QueryGenerator
 from Sql import Sql
 from TileInfoWriter import TileInfoWriter
 from ExcelParser import ExcelTileParser
+from ConfigReader import ConfigReader
 
 
 class Executor():
-    def __init__(self, excel_file_name, is_new,is_zno):
-        database = 'dev.nornickel'
-        self.connect = Sql(database=database)
+    def __init__(self):
+        conf_reader = ConfigReader()
+        self.connect = Sql()
         self.generator = QueryGenerator()
-        self.excel_file_name = excel_file_name
-        self.is_new = is_new
-        self.is_zno = is_zno
+        self.excel_file_name = conf_reader.get_name()
+        self.is_zno = conf_reader.get_is_zno()
 
 
     def print_select_query_rows(self, rows, query, table):
@@ -93,33 +93,12 @@ class Executor():
             rows = self.connect.manual_select(query)
             self.print_other_query_rows(rows=rows, query=query, table=table)
 
-    def execute_excel_parse(self, excel_file_name):
-        self.excelparser = ExcelTileParser(f'./resources/{excel_file_name}')
-        if self.is_new:
-            # Для новых выгрузок
-            print('new')
-            #sc_cat_item
-            #
-            self.excelparser.execute(
-                    rule_action_sheet_name='действия политик', 
-                    rule_sheet_name='политики', 
-                    io_sheet_name='переменные', 
-                    sc_cat_item_sheet_name='sc_cat_item',
-                    script_sheet_name='скрипты'
-                )
-        else:
-            # Для старых выгрузок
-            print('old')
-            self.excelparser.execute(
-                    rule_action_sheet_name='catalog_ui_policy_action_дей.по', 
-                    rule_sheet_name='catalog_ui_policy_политики', 
-                    io_sheet_name='item_option_new', 
-                    sc_cat_item_sheet_name='sc_cat_item_плитка',
-                    script_sheet_name='catalog_script_client_скрипты'
-                )
+    def execute_excel_parse(self):
+        self.excelparser = ExcelTileParser()
+        self.excelparser.execute()
 
     def execute(self):
-        self.execute_excel_parse(self.excel_file_name)
+        self.execute_excel_parse()
         lines = self.read_source_file()
         self.execute_seource_lines(lines)
         self.try_set_categories_for_tile()
