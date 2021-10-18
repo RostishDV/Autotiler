@@ -29,7 +29,7 @@ class QueryGenerator:
 
 	def update_tile_info(self, name, short_desc, type_id, desc, tile_id):
 		query = f"UPDATE IteTile SET IteName=N'{name}', IteShortDescription=N'{short_desc}',"
-		query += f"IteTypeId='{type_id}', IteDescription=N'{desc}', IteProcessSchemaId='9ddb2219-cad8-460d-80b9-87555a63ab3c'"
+		query += f"IteTypeId='{type_id}', IteDescription=N'{desc}' "
 		query += f"WHERE Id='{tile_id}'"
 		return query
 
