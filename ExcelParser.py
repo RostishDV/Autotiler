@@ -16,6 +16,7 @@ class ExcelTileParser:
         self.descr = ''
         self.code = 0
         self.set_sheet_names()
+        self.fill_id_to_names_list()
         # print(self.wb.sheetnames)
 
     #rules_action = {
@@ -37,8 +38,8 @@ class ExcelTileParser:
     #       'full_name': full_field_name
     #   }
     # }
-    def fill_id_to_names_list(self, sheet_name):
-        ws = self.wb[sheet_name]
+    def fill_id_to_names_list(self):
+        ws = self.wb[self.io_sheet_name]
         id_col = 5
         field_name_col = 6
         for i in range(4, ws.max_row + 1):
@@ -138,11 +139,11 @@ class ExcelTileParser:
     
     def get_rule_right_version(self, rule):
         full_rule = rule
+        for field_id in self.io_id_to_name:
+            full_rule = full_rule.replace(str(field_id), f'{self.io_id_to_name[field_id]} ')
         full_rule = full_rule.replace('ORIO', 'OR\n\tIO')
         full_rule = full_rule.replace('NQIO', 'NQ\n\tIO')
         full_rule = full_rule.replace('^IO', '^\n\tIO')
-        for field_id in self.io_id_to_name:
-            full_rule = full_rule.replace(field_id, f'{self.io_id_to_name[field_id]} ')
         return full_rule
 
     def try_fill_full_field_name(self, sheet_name):
@@ -160,7 +161,6 @@ class ExcelTileParser:
 
 
     def write_in_file(self):
-        # self.print_rules_actions()
         with open('out/БП.txt', 'w', encoding='utf-8') as f:
             for field_name in self.rules_action.keys():
                 for rule_name in self.rules_action[field_name]['rules']:
@@ -328,8 +328,6 @@ class ExcelTileParser:
 
     #, rule_action_sheet_name, rule_sheet_name, io_sheet_name, sc_cat_item_sheet_name, script_sheet_name
     def execute(self):
-        
-        self.fill_id_to_names_list(self.io_sheet_name)
         self.fill_source_file(sc_cat_item_sheet_name=self.sc_cat_item_sheet_name, io_sheet_name=self.io_sheet_name)
         self.read_rules_actions(self.rule_action_sheet_name)
         self.read_rules(self.rule_sheet_name)

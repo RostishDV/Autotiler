@@ -3,7 +3,7 @@ import json
 
 def main():
     # set 1 if first time
-    method = 2
+    method = 1
     executor = Executor()
     if method == 1:
         executor.execute()
